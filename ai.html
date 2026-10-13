@@ -51,15 +51,15 @@ button.go:disabled{opacity:.55;cursor:wait}
   </div>
   <input type="file" id="f1" accept="image/*" hidden>
   <div id="set">
-    <input id="base" aria-label="サーバーのアドレス" placeholder="server.pyのアドレス 例: http://localhost:8080(server.pyから開いた場合は空欄)">
+    <input id="base" aria-label="サーバーのアドレス" placeholder="server.pyのアドレス 例: https://pc名.xxxx.ts.net / http://100.x.x.x:8080 / http://localhost:8080">
     <input id="key" type="password" aria-label="アクセスキー" placeholder="アクセスキー(PASSWORD設定時のみ)">
     <button type="button" class="chip" id="test" style="margin-top:8px">接続テスト</button>
     <div id="conn" aria-live="polite"></div>
   </div>
   <div class="panel">
     <div class="ref">
-      <div class="drop" id="d2" tabindex="0" title="画像2"><span>画像2<br>＋</span><input type="file" accept="image/*"></div>
-      <small>画像2(参照画像)をここに追加</small>
+      <div class="drop" id="d2" tabindex="0" title="画像2(任意)"><span>画像2<br>＋</span><input type="file" accept="image/*"></div>
+      <small>画像2(任意・参照画像)。なくてもプロンプトだけで生成できます</small>
     </div>
     <textarea id="pos" placeholder="プロンプト 例: 画像1のソファを画像2のソファに置き換える"></textarea>
     <button class="go" id="go" type="button">生成する</button>
@@ -379,13 +379,19 @@ const NODE = {enc:'459:474', img1:'470', img2:'475', sampler:'459:458', save:'46
 const $ = s => document.querySelector(s);
 const files = {1:null, 2:null};
 const baseEl = $('#base'), keyEl = $('#key');
-baseEl.value = localStorage.getItem('comfy_base') || '';
+baseEl.value = localStorage.getItem('comfy_base2') || '';
 keyEl.value = localStorage.getItem('comfy_key') || '';
-// server.py(ポート8080)経由で開いていない場合は、既定でローカルのserver.pyを指す
-if(!baseEl.value && location.port!=='8080') baseEl.value = 'http://localhost:8080';
-baseEl.onchange = () => localStorage.setItem('comfy_base', baseEl.value.trim());
+// 既定のサーバー(Tailscale)
+if(!baseEl.value) baseEl.value = 'https://rinaldi18.sardine-lenok.ts.net';
+baseEl.onchange = () => { baseEl.value = norm(baseEl.value); localStorage.setItem('comfy_base2', baseEl.value); };
 keyEl.onchange = () => localStorage.setItem('comfy_key', keyEl.value);
-const base = () => baseEl.value.trim().replace(/\/+$/,'');
+// アドレス正規化: スキーム省略可(Tailscaleの *.ts.net は https、100.x や LAN は http を補う)
+function norm(v){
+  v = v.trim().replace(/\/+$/,'');
+  if(v && !/^https?:\/\//i.test(v)) v = (/^(localhost|127\.|10\.|192\.168\.|100\.\d+\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(v) ? 'http://' : 'https://') + v;
+  return v;
+}
+const base = () => norm(baseEl.value);
 const hdr = (h={}) => keyEl.value ? {...h, 'X-Access-Key': keyEl.value} : h;
 $('#gear').onclick = () => $('#set').classList.toggle('open');
 if(location.protocol==='file:' || location.hostname.endsWith('github.io')) $('#set').classList.add('open');
@@ -469,16 +475,23 @@ $('#go').onclick = async () => {
   const btn = $('#go');
   const prompt = $('#pos').value.trim();
   if(!files[1]) return setStatus('画像1(360キャプチャ)がありません。「画像を変更」で選んでください。', true);
-  if(!files[2]) return setStatus('画像2を追加してください。', true);
   if(!prompt) return setStatus('プロンプトを入力してください。', true);
   btn.disabled = true;
   const t0 = Date.now();
   try{
     setStatus('画像をアップロード中…');
-    const [n1, n2] = await Promise.all([upload(files[1]), upload(files[2])]);
+    const [n1, n2] = await Promise.all([upload(files[1]), files[2] ? upload(files[2]) : null]);
     const wf = structuredClone(WORKFLOW);
     wf[NODE.img1].inputs.image = n1;
-    wf[NODE.img2].inputs.image = n2;
+    if(n2){
+      wf[NODE.img2].inputs.image = n2;
+    }else{
+      // 画像2なし: Load Image 2 を外し、それを参照する入力を削除(プロンプトのみで画像1を編集)
+      for(const n of Object.values(wf))
+        for(const [k,v] of Object.entries(n.inputs))
+          if(Array.isArray(v) && v[0] === NODE.img2) delete n.inputs[k];
+      delete wf[NODE.img2];
+    }
     wf[NODE.enc].inputs.prompt = prompt;
     wf[NODE.enc].inputs.negative_prompt = '';
     wf[NODE.sampler].inputs.seed = Math.floor(Math.random()*1e15);
