@@ -381,6 +381,8 @@ const files = {1:null, 2:null};
 const baseEl = $('#base'), keyEl = $('#key');
 baseEl.value = localStorage.getItem('comfy_base') || '';
 keyEl.value = localStorage.getItem('comfy_key') || '';
+// server.py(ポート8080)経由で開いていない場合は、既定でローカルのserver.pyを指す
+if(!baseEl.value && location.port!=='8080') baseEl.value = 'http://localhost:8080';
 baseEl.onchange = () => localStorage.setItem('comfy_base', baseEl.value.trim());
 keyEl.onchange = () => localStorage.setItem('comfy_key', keyEl.value);
 const base = () => baseEl.value.trim().replace(/\/+$/,'');
@@ -400,8 +402,10 @@ $('#test').onclick = async () => {
   const c = $('#conn'); c.className=''; c.textContent='確認中…';
   try{
     const r = await fetch(base()+'/system_stats', {headers:hdr()});
-    if(r.status===401) throw new Error('アクセスキーが違うか、空です。');
-    if(!r.ok) throw new Error('サーバー応答: '+r.status+(r.status===502?'(ComfyUIが起動しているか確認してください)':''));
+    if(r.status===401) throw new Error('server.pyにPASSWORDが設定されています。同じキーを「アクセスキー」に入力してください。');
+    if(r.status===502) throw new Error('server.pyは動いていますが、ComfyUIに接続できません。ComfyUIを起動し、start.batのCOMFYのポート(Desktop=8000 / Portable=8188)を確認してください。');
+    if(r.status===429) throw new Error('キーの誤入力が多すぎます。数分待ってください。');
+    if(!r.ok) throw new Error('サーバー応答: '+r.status);
     const j = await r.json();
     c.className='ok'; c.textContent='ComfyUI '+((j.system&&j.system.comfyui_version)||'')+' に接続しました。';
   }catch(e){
