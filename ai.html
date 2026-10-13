@@ -42,8 +42,53 @@ button.go:disabled{opacity:.55;cursor:wait}
 #knob{position:absolute;top:50%;left:var(--pos,50%);width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;font-size:15px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.55);cursor:ew-resize}
 #knob:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .tag{position:absolute;top:64px;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.55);font-size:.75rem;pointer-events:none}
-#dl{position:absolute;right:14px;bottom:calc(var(--panel-h,0px) + 14px);z-index:4;display:none;align-items:center;gap:6px;padding:11px 18px;border-radius:999px;background:var(--accent);color:#1a1205;font-weight:700;font-size:.9rem;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.5)}
-@media(min-width:860px){#dl{bottom:14px}}
+.acts{position:absolute;right:calc(14px + env(safe-area-inset-right,0px) + var(--hist-w,0px));bottom:calc(var(--panel-h,0px) + 14px);z-index:4;display:none;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 28px - var(--hist-w,0px))}
+.acts.show{display:flex}
+.acts a,.acts button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:11px 18px;border-radius:999px;font:inherit;font-weight:700;font-size:.9rem;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.5);cursor:pointer}
+#dl{background:var(--accent);color:#1a1205;border:0}
+#use{background:var(--panel);backdrop-filter:blur(8px);color:var(--ink);border:1px solid var(--accent)}
+@media(min-width:860px){.acts{bottom:14px}}
+.hero.nopanel .acts{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+/* 赤ペン */
+#paint{position:absolute;z-index:2;display:none;opacity:.8;pointer-events:none}
+#paint.on{pointer-events:auto;touch-action:none;cursor:crosshair}
+#tools{position:absolute;z-index:4;left:12px;top:calc(var(--top-h,56px) + 4px);max-width:calc(100% - 24px - var(--hist-w,0px));display:none;flex-wrap:wrap;align-items:center;gap:6px;padding:6px;background:var(--panel);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px}
+#tools.show{display:flex}
+#tools .chip{min-height:40px}
+#tools .chip[aria-pressed="true"]{background:var(--accent);color:#1a1205;border-color:var(--accent)}
+#tools .chip:disabled{opacity:.45}
+.sz{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--mute);min-height:40px}
+.sz input{width:110px;height:40px;margin:0;accent-color:var(--accent)}
+#markinfo{display:none;margin-top:8px;font-size:.8rem;color:#ff9c9c}
+/* 進捗 */
+#prog{position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;pointer-events:none}
+#prog.show{display:flex}
+.pcard{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 28px;border-radius:22px;background:rgba(8,11,18,.58);backdrop-filter:blur(8px);border:1px solid var(--line)}
+.ringbox{position:relative;width:128px;height:128px}
+.ringbox svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ringbox circle{fill:none;stroke-width:8}
+.ringbox .bg{stroke:rgba(255,255,255,.18)}
+.ringbox .fg{stroke:var(--accent);stroke-linecap:round;stroke-dasharray:326.73;stroke-dashoffset:326.73}
+#pct{position:absolute;inset:0;display:grid;place-items:center;font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums}
+#stage{font-size:.95rem}
+#el{font-size:.75rem;color:var(--mute);font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:no-preference){.ringbox .fg{transition:stroke-dashoffset .25s linear}#prog.slow .pcard{animation:pu 1.8s ease-in-out infinite}}
+@keyframes pu{50%{opacity:.7}}
+/* 履歴 */
+#hist{position:absolute;z-index:3;right:calc(8px + env(safe-area-inset-right,0px));top:calc(var(--top-h,56px) + 4px);bottom:calc(var(--panel-h,0px) + 8px);width:78px;display:none;flex-direction:column;gap:8px;padding:8px 6px;background:var(--panel);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px}
+.hero.hopen #hist{display:flex}
+.hero.hopen{--hist-w:88px}
+.hero.nopanel #hist{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+@media(min-width:940px){#hist{bottom:12px}}
+#hlist{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.hi{position:relative;flex:none}
+.ht{display:block;width:100%;padding:0;border:2px solid transparent;border-radius:8px;background:#000;cursor:pointer;overflow:hidden}
+.hi.act .ht{border-color:var(--accent)}
+.ht img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.hx{position:absolute;top:2px;right:2px;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:14px;line-height:22px;cursor:pointer}
+.hx::after{content:"";position:absolute;inset:-9px}
+#hclr{min-height:40px;padding:6px 2px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);font:inherit;font-size:.66rem;cursor:pointer}
+#hempty{font-size:.7rem;color:var(--mute);text-align:center;padding:6px 0}
 @media(prefers-reduced-motion:no-preference){.busy{animation:p 1.2s ease-in-out infinite}}
 @keyframes p{50%{opacity:.4}}
 </style>
@@ -51,6 +96,7 @@ button.go:disabled{opacity:.55;cursor:wait}
 <body>
 <div class="hero">
   <img id="cap" alt="360ビューのキャプチャ">
+  <canvas id="paint" aria-label="赤ペンのマーク"></canvas>
   <div id="capEmpty">360ツアーから取得中です…<br>表示されない場合は「画像を変更」で画像を選んでください。</div>
   <div id="cmp" aria-label="元画像と生成結果の比較">
     <img id="cmpA" alt="元画像(360キャプチャ)">
@@ -64,14 +110,42 @@ button.go:disabled{opacity:.55;cursor:wait}
     <div class="grp">
       <button class="chip" id="back" type="button">← 戻る</button>
       <button class="chip" id="chg" type="button">画像を変更</button>
+      <button class="chip" id="mark" type="button" aria-pressed="false" style="display:none">✎ マーク</button>
     </div>
     <div class="grp" style="justify-content:flex-end">
       <button class="chip" id="closecmp" type="button" style="display:none">比較を閉じる</button>
+      <button class="chip" id="hbtn" type="button" aria-pressed="false">履歴</button>
       <button class="chip" id="pnl" type="button">入力パネル</button>
       <button class="chip" id="gear" type="button">接続設定</button>
     </div>
   </div>
-  <a id="dl" download="result.png">⬇ ダウンロード</a>
+  <div class="acts" id="acts">
+    <button id="use" type="button">この結果を画像1にする</button>
+    <a id="dl" download="result.png">⬇ ダウンロード</a>
+  </div>
+  <div id="tools" role="toolbar" aria-label="マークツール">
+    <button class="chip" id="tPen" type="button" aria-pressed="true">赤ペン</button>
+    <button class="chip" id="tEr" type="button" aria-pressed="false">消しゴム</button>
+    <label class="sz">太さ<input id="tSize" type="range" min="4" max="80" value="20" aria-label="ペンの太さ"></label>
+    <button class="chip" id="tUndo" type="button" disabled>元に戻す</button>
+    <button class="chip" id="tClr" type="button" disabled>全消去</button>
+    <button class="chip" id="tDone" type="button">完了</button>
+  </div>
+  <div id="hist" aria-label="生成履歴">
+    <button id="hclr" type="button">すべて削除</button>
+    <div id="hlist"></div>
+    <div id="hempty">履歴なし</div>
+  </div>
+  <div id="prog">
+    <div class="pcard">
+      <div class="ringbox" id="ringbox" role="progressbar" aria-label="生成の進捗(目安)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="ring" cx="60" cy="60" r="52"/></svg>
+        <div id="pct" aria-hidden="true">0%</div>
+      </div>
+      <div id="stage" aria-live="polite"></div>
+      <div id="el"></div>
+    </div>
+  </div>
   <input type="file" id="f1" accept="image/*" hidden>
   <div id="set">
     <input id="base" aria-label="サーバーのアドレス" placeholder="server.pyのアドレス 例: https://pc名.xxxx.ts.net / http://100.x.x.x:8080 / http://localhost:8080">
@@ -85,6 +159,7 @@ button.go:disabled{opacity:.55;cursor:wait}
       <small>画像2(任意・参照画像)。なくてもプロンプトだけで生成できます</small>
     </div>
     <textarea id="pos" placeholder="プロンプト 例: 画像1のソファを画像2のソファに置き換える"></textarea>
+    <div id="markinfo" aria-live="polite">赤マークあり — マーク部分のみ編集します</div>
     <button class="go" id="go" type="button">生成する</button>
     <div id="status" aria-live="polite"></div>
   </div>
@@ -396,6 +471,11 @@ const NODE = {enc:'459:474', img1:'470', img2:'475', sampler:'459:458', save:'46
 
 const $ = s => document.querySelector(s);
 const files = {1:null, 2:null};
+// ---- 追加機能の共有状態 ----
+const paint = $('#paint'), pctx = paint.getContext('2d');
+let strokes = [], drawOn = false, wasPanel = false;
+let hist = [], activeId = null, histOK = true, histOpen = false;
+let cmpUrls = [], curCmp = null;
 const baseEl = $('#base'), keyEl = $('#key');
 baseEl.value = localStorage.getItem('comfy_base2') || '';
 keyEl.value = localStorage.getItem('comfy_key') || '';
@@ -443,8 +523,12 @@ function setImg1(f){
   if(!f || !f.type.startsWith('image/')) return;
   hideCompare();
   files[1] = f;
-  const im = $('#cap'); im.src = URL.createObjectURL(f); im.style.display='block';
+  const im = $('#cap'), old = im.src;
+  strokes = []; redraw(); updMark();
+  im.src = URL.createObjectURL(f); im.style.display='block';
+  if(old && old.startsWith('blob:')) URL.revokeObjectURL(old);
   $('#capEmpty').style.display='none';
+  syncPaint(); updMarkBtn();
 }
 $('#chg').onclick = () => $('#f1').click();
 
@@ -462,15 +546,31 @@ $('#back').onclick = () => {
 
 // 比較スライダー(元画像と同じ位置・アスペクト比)
 const hero = document.querySelector('.hero'), cmp = $('#cmp'), panel = document.querySelector('.panel');
-function syncPanel(){ hero.style.setProperty('--panel-h', panel.classList.contains('hide') ? '0px' : panel.offsetHeight+'px'); }
-function fit(){
-  const im = $('#cap'); if(!im.naturalWidth) return;
+function syncPanel(){
+  const hid = panel.classList.contains('hide'), tb = document.querySelector('.top');
+  hero.style.setProperty('--panel-h', hid ? '0px' : panel.offsetHeight+'px');
+  hero.style.setProperty('--top-h', Math.max(56, tb.offsetHeight)+'px');
+  hero.classList.toggle('nopanel', hid);
+}
+function boxOf(im){
   const W = hero.clientWidth, H = hero.clientHeight, r = im.naturalWidth/im.naturalHeight;
   let w = W, h = W/r; if(h > H){ h = H; w = H*r; }
-  Object.assign(cmp.style, {width:w+'px', height:h+'px', left:(W-w)/2+'px', top:(H-h)/2+'px'});
+  return {w, h, l:(W-w)/2, t:(H-h)/2};
 }
+function place(el, b){ Object.assign(el.style, {width:b.w+'px', height:b.h+'px', left:b.l+'px', top:b.t+'px'}); }
+function fit(){
+  const im = $('#cap'), A = $('#cmpA');
+  if(im.naturalWidth) place(paint, boxOf(im));
+  const ref = (A.complete && A.naturalWidth) ? A : (im.naturalWidth ? im : null);
+  if(ref) place(cmp, boxOf(ref));
+}
+$('#cmpA').onload = fit;
+$('#cap').onload = () => { // 画像1が変わったらcanvasを元解像度に合わせる(内容は空)
+  const im = $('#cap'); paint.width = im.naturalWidth; paint.height = im.naturalHeight;
+  strokes = []; updMark(); fit();
+};
 addEventListener('resize', () => { fit(); syncPanel(); });
-new ResizeObserver(syncPanel).observe(panel);
+new ResizeObserver(syncPanel).observe(panel); new ResizeObserver(syncPanel).observe(document.querySelector('.top'));
 function setPos(p){ p = Math.max(0, Math.min(100, p)); cmp.style.setProperty('--pos', p+'%'); $('#knob').setAttribute('aria-valuenow', Math.round(p)); }
 let drag = false;
 const posFrom = e => { const r = cmp.getBoundingClientRect(); setPos((e.clientX-r.left)/r.width*100); };
@@ -482,17 +582,22 @@ $('#knob').addEventListener('keydown', e => {
   if(e.key === 'ArrowLeft'){ e.preventDefault(); setPos(cur-3); }
   if(e.key === 'ArrowRight'){ e.preventDefault(); setPos(cur+3); }
 });
-function showCompare(url, name){
-  $('#cmpA').src = $('#cap').src; $('#cmpB').src = url;
+function showCompare(res, name, orig, id){
+  setDraw(false);
+  cmpUrls.forEach(u => URL.revokeObjectURL(u));
+  const ur = URL.createObjectURL(res), uo = URL.createObjectURL(orig);
+  cmpUrls = [ur, uo]; curCmp = {blob:res, name, id:id||null}; activeId = id || null;
+  $('#cmpA').src = uo; $('#cmpB').src = ur;
   fit(); setPos(50);
   cmp.style.display = 'block'; $('#cap').style.display = 'none';
-  $('#dl').href = url; $('#dl').download = name; $('#dl').style.display = 'flex';
+  $('#dl').href = ur; $('#dl').download = name; $('#acts').classList.add('show');
   $('#closecmp').style.display = '';
-  panel.classList.add('hide'); syncPanel();
+  panel.classList.add('hide'); syncPanel(); syncPaint(); updMarkBtn(); renderHist();
 }
 function hideCompare(){
-  cmp.style.display = 'none'; $('#dl').style.display = 'none'; $('#closecmp').style.display = 'none';
+  cmp.style.display = 'none'; $('#acts').classList.remove('show'); $('#closecmp').style.display = 'none';
   if($('#cap').src) $('#cap').style.display = 'block';
+  activeId = null; syncPaint(); updMarkBtn(); renderHist();
 }
 $('#closecmp').onclick = hideCompare;
 $('#pnl').onclick = () => { panel.classList.toggle('hide'); syncPanel(); };
@@ -540,16 +645,231 @@ async function upload(file){
   return j.subfolder ? j.subfolder+'/'+j.name : j.name;
 }
 
+// ================= 進捗表示(目安) =================
+const GEN_KEY = 'ai_gen_ms', RING_C = 326.73;
+let pTimer = null, pStart = 0, pExp = 120000, pMax = 0;
+function expectedMs(){ const v = parseFloat(localStorage.getItem(GEN_KEY)); return (v > 5000 && v < 1800000) ? v : 120000; }
+function pctAt(x){ return Math.min(94.9, x <= 1 ? 90*x : 90 + 5*(1-Math.exp(-(x-1)*1.5))); }
+function drawProg(p){
+  p = Math.round(p);
+  $('#pct').textContent = p+'%'; $('#ringbox').setAttribute('aria-valuenow', p);
+  $('#ring').style.strokeDashoffset = RING_C*(1-p/100);
+}
+function setStage(t){ $('#stage').textContent = t; }
+function tickProg(){
+  const ms = Date.now()-pStart, x = ms/pExp;
+  pMax = Math.max(pMax, pctAt(x)); drawProg(pMax);
+  $('#prog').classList.toggle('slow', x > 1);
+  const s = Math.floor(ms/1000); $('#el').textContent = '経過 '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+}
+function startProg(){
+  pStart = Date.now(); pMax = 0; pExp = expectedMs();
+  $('#prog').classList.remove('slow'); $('#prog').classList.add('show');
+  drawProg(0); setStage('アップロード中…'); tickProg();
+  clearInterval(pTimer); pTimer = setInterval(tickProg, 200);
+}
+function finishProg(){ clearInterval(pTimer); pTimer = null; drawProg(100); setStage('完了'); $('#prog').classList.remove('slow'); }
+function stopProg(){ clearInterval(pTimer); pTimer = null; $('#prog').classList.remove('show','slow'); }
+function learnDuration(ms){
+  const old = parseFloat(localStorage.getItem(GEN_KEY));
+  const v = (old > 5000 && old < 1800000) ? old*0.6 + ms*0.4 : ms;
+  try{ localStorage.setItem(GEN_KEY, String(Math.round(v))); }catch(e){}
+}
+
+// ================= 赤ペン =================
+const tool = {mode:'draw'};
+const probe = document.createElement('canvas'), probeCtx = probe.getContext('2d', {willReadFrequently:true});
+function setStyle(c, mode){
+  c.globalCompositeOperation = mode === 'erase' ? 'destination-out' : 'source-over';
+  c.strokeStyle = c.fillStyle = '#ff0000'; c.lineCap = c.lineJoin = 'round';
+}
+function dot(s, p){ setStyle(pctx, s.mode); pctx.beginPath(); pctx.arc(p[0], p[1], s.size/2, 0, Math.PI*2); pctx.fill(); }
+function seg(s, a, b){ setStyle(pctx, s.mode); pctx.lineWidth = s.size; pctx.beginPath(); pctx.moveTo(a[0], a[1]); pctx.lineTo(b[0], b[1]); pctx.stroke(); }
+function redraw(){
+  pctx.setTransform(1,0,0,1,0,0); pctx.globalCompositeOperation = 'source-over'; pctx.clearRect(0, 0, paint.width, paint.height);
+  for(const s of strokes){
+    if(s.pts.length === 1){ dot(s, s.pts[0]); continue; }
+    setStyle(pctx, s.mode); pctx.lineWidth = s.size; pctx.beginPath();
+    pctx.moveTo(s.pts[0][0], s.pts[0][1]); for(let i=1;i<s.pts.length;i++) pctx.lineTo(s.pts[i][0], s.pts[i][1]);
+    pctx.stroke();
+  }
+}
+function hasMarks(){
+  if(!paint.width || !strokes.some(s => s.mode === 'draw')) return false;
+  const k = Math.min(1, 256/Math.max(paint.width, paint.height));
+  const w = Math.max(1, Math.round(paint.width*k)), h = Math.max(1, Math.round(paint.height*k));
+  probe.width = w; probe.height = h; probeCtx.imageSmoothingQuality = 'high';
+  probeCtx.drawImage(paint, 0, 0, w, h);
+  const d = probeCtx.getImageData(0, 0, w, h).data;
+  for(let i=3;i<d.length;i+=4) if(d[i] > 0) return true;
+  return false;
+}
+function updMark(){
+  const m = hasMarks();
+  $('#markinfo').style.display = m ? 'block' : 'none';
+  $('#tUndo').disabled = !strokes.length; $('#tClr').disabled = !strokes.length;
+}
+function syncPaint(){ paint.style.display = ($('#cap').style.display === 'block' && cmp.style.display !== 'block') ? 'block' : 'none'; }
+function updMarkBtn(){ $('#mark').style.display = ($('#cap').src && cmp.style.display !== 'block') ? '' : 'none'; }
+function setDraw(on){
+  if(on && (!$('#cap').naturalWidth || cmp.style.display === 'block')) return;
+  if(on === drawOn) return;
+  drawOn = on; paint.classList.toggle('on', on); $('#tools').classList.toggle('show', on);
+  $('#mark').setAttribute('aria-pressed', on);
+  if(on){ wasPanel = !panel.classList.contains('hide'); panel.classList.add('hide'); }
+  else if(wasPanel){ panel.classList.remove('hide'); wasPanel = false; }
+  syncPanel();
+}
+$('#mark').onclick = () => setDraw(!drawOn);
+$('#tDone').onclick = () => setDraw(false);
+function setTool(m){
+  tool.mode = m; $('#tPen').setAttribute('aria-pressed', m === 'draw'); $('#tEr').setAttribute('aria-pressed', m === 'erase');
+}
+$('#tPen').onclick = () => setTool('draw'); $('#tEr').onclick = () => setTool('erase');
+$('#tUndo').onclick = () => { strokes.pop(); redraw(); updMark(); };
+$('#tClr').onclick = () => { strokes = []; redraw(); updMark(); };
+let curStroke = null;
+const ptOf = e => { const r = paint.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*paint.width, (e.clientY-r.top)/r.height*paint.height]; };
+paint.addEventListener('pointerdown', e => {
+  if(!drawOn || !e.isPrimary || e.button > 0) return;
+  e.preventDefault(); paint.setPointerCapture(e.pointerId);
+  const k = paint.width/paint.getBoundingClientRect().width, p = ptOf(e);
+  curStroke = {mode:tool.mode, size:Number($('#tSize').value)*k, pts:[p]}; dot(curStroke, p);
+});
+paint.addEventListener('pointermove', e => {
+  if(!curStroke || !e.isPrimary) return;
+  const p = ptOf(e), last = curStroke.pts[curStroke.pts.length-1];
+  curStroke.pts.push(p); seg(curStroke, last, p);
+});
+['pointerup','pointercancel'].forEach(t => paint.addEventListener(t, e => {
+  if(!curStroke || !e.isPrimary) return;
+  strokes.push(curStroke); curStroke = null; updMark();
+}));
+async function composeMarked(){
+  const c = document.createElement('canvas'); c.width = paint.width; c.height = paint.height;
+  const x = c.getContext('2d'); x.drawImage($('#cap'), 0, 0, c.width, c.height); x.drawImage(paint, 0, 0);
+  const b = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.95));
+  if(!b) throw new Error('マーク付き画像の作成に失敗しました。');
+  return new File([b], 'marked.jpg', {type:'image/jpeg'});
+}
+
+// ================= 履歴(IndexedDB) =================
+const MAX_HIST = 50;
+let dbp = null;
+function idb(){
+  if(dbp) return dbp;
+  dbp = new Promise((res, rej) => {
+    try{
+      if(!window.indexedDB) return rej(new Error('no idb'));
+      const q = indexedDB.open('ai_history', 1);
+      q.onupgradeneeded = () => { const s = q.result.createObjectStore('items', {keyPath:'id'}); s.createIndex('ts', 'ts'); };
+      q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); q.onblocked = () => rej(new Error('blocked'));
+    }catch(e){ rej(e); }
+  });
+  return dbp;
+}
+const tx = (mode, fn) => idb().then(db => new Promise((res, rej) => {
+  const t = db.transaction('items', mode); let rq;
+  try{ rq = fn(t.objectStore('items')); }catch(e){ rej(e); return; }
+  t.oncomplete = () => res(rq && 'result' in rq ? rq.result : undefined);
+  t.onerror = ev => rej(ev.target && ev.target.error); t.onabort = () => rej(t.error || new Error('abort'));
+}));
+async function makeThumb(blob){
+  const bm = await createImageBitmap(blob), k = Math.min(1, 160/Math.max(bm.width, bm.height));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(bm.width*k)); c.height = Math.max(1, Math.round(bm.height*k));
+  c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height); if(bm.close) bm.close();
+  return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.8));
+}
+function renderHist(){
+  const list = $('#hlist'); list.textContent = '';
+  for(const it of hist){
+    const d = document.createElement('div'); d.className = 'hi' + (it.id === activeId ? ' act' : ''); d.title = it.prompt;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'ht'; b.setAttribute('aria-label', '履歴を開く: ' + it.prompt.slice(0, 30));
+    const im = new Image(); im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; im.src = it.turl; b.append(im);
+    b.onclick = () => openHist(it);
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'hx'; x.textContent = '×'; x.setAttribute('aria-label', 'この履歴を削除');
+    x.onclick = ev => { ev.stopPropagation(); delHist(it.id); };
+    d.append(b, x); list.append(d);
+  }
+  $('#hempty').style.display = hist.length ? 'none' : 'block';
+  $('#hclr').style.display = hist.length ? '' : 'none';
+  hero.classList.toggle('hopen', histOK && histOpen);
+  $('#hbtn').style.display = histOK ? '' : 'none';
+  $('#hbtn').setAttribute('aria-pressed', histOK && histOpen);
+}
+function openHist(it){
+  showCompare(it.result, it.name, it.original, it.id);
+}
+async function delHist(id){
+  try{ await tx('readwrite', s => s.delete(id)); }catch(e){}
+  const i = hist.findIndex(h => h.id === id);
+  if(i >= 0){ URL.revokeObjectURL(hist[i].turl); hist.splice(i, 1); }
+  renderHist();
+}
+$('#hclr').onclick = async () => {
+  if(!confirm('履歴をすべて削除しますか?')) return;
+  try{ await tx('readwrite', s => s.clear()); }catch(e){}
+  hist.forEach(h => URL.revokeObjectURL(h.turl)); hist = []; renderHist();
+};
+$('#hbtn').onclick = () => { histOpen = !histOpen; renderHist(); };
+async function dropOldest(){ if(hist.length) await delHist(hist[hist.length-1].id); }
+async function saveHistory(rec){
+  if(!histOK) return;
+  try{
+    rec.thumb = await makeThumb(rec.result);
+    const row = {id:rec.id, ts:rec.ts, prompt:rec.prompt, thumb:rec.thumb, result:rec.result, original:rec.original, name:rec.name};
+    try{ await tx('readwrite', s => s.put(row)); }
+    catch(e){
+      if(e && e.name === 'QuotaExceededError'){
+        await dropOldest();
+        try{ await tx('readwrite', s => s.put(row)); }
+        catch(e2){ setStatus('履歴を保存できませんでした(容量不足)。生成結果は表示されています。', true); return; }
+      }else return;
+    }
+    hist.unshift({...row, turl:URL.createObjectURL(row.thumb)});
+    while(hist.length > MAX_HIST) await dropOldest();
+    if(innerWidth >= 860) histOpen = true;
+    renderHist();
+  }catch(e){ /* 履歴が失敗しても生成には影響させない */ }
+}
+async function loadHist(){
+  try{
+    if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    const rows = await tx('readonly', s => s.getAll());
+    rows.sort((a, b) => b.ts - a.ts);
+    hist = rows.map(r => ({...r, turl:URL.createObjectURL(r.thumb)}));
+    histOpen = innerWidth >= 860 && hist.length > 0;
+  }catch(e){ histOK = false; }
+  renderHist();
+}
+loadHist();
+
+// ================= 結果を画像1にする =================
+$('#use').onclick = () => {
+  if(!curCmp) return;
+  const b = curCmp.blob;
+  setImg1(new File([b], curCmp.name || 'result.png', {type:b.type || 'image/png'}));
+  panel.classList.remove('hide'); syncPanel(); setStatus('');
+};
+
+// ================= 生成 =================
 $('#go').onclick = async () => {
   const btn = $('#go');
   const prompt = $('#pos').value.trim();
   if(!files[1]) return setStatus('画像1(360キャプチャ)がありません。「画像を変更」で選んでください。', true);
   if(!prompt) return setStatus('プロンプトを入力してください。', true);
   btn.disabled = true;
-  const t0 = Date.now();
+  const t0 = Date.now(), orig = files[1];
+  startProg();
   try{
+    // 赤マークがあれば合成画像を画像1として送る(元画像はorigとして清潔なまま保持)
+    let src1 = orig, sendPrompt = prompt;
+    if(hasMarks()){
+      src1 = await composeMarked();
+      sendPrompt = prompt.replace(/[\s.。!！]+$/, '') + '. Only edit the areas marked in red in image 1. Remove the red marks completely in the result. Keep everything else unchanged.';
+    }
     setStatus('画像をアップロード中…');
-    const [n1, n2] = await Promise.all([upload(files[1]), files[2] ? upload(files[2]) : null]);
+    const [n1, n2] = await Promise.all([upload(src1), files[2] ? upload(files[2]) : null]);
     const wf = structuredClone(WORKFLOW);
     wf[NODE.img1].inputs.image = n1;
     if(n2){
@@ -561,10 +881,10 @@ $('#go').onclick = async () => {
           if(Array.isArray(v) && v[0] === NODE.img2) delete n.inputs[k];
       delete wf[NODE.img2];
     }
-    wf[NODE.enc].inputs.prompt = prompt;
+    wf[NODE.enc].inputs.prompt = sendPrompt;
     wf[NODE.enc].inputs.negative_prompt = '';
     wf[NODE.sampler].inputs.seed = Math.floor(Math.random()*1e15);
-    setStatus('ComfyUIに送信中…');
+    setStatus('ComfyUIに送信中…'); setStage('キューに送信中…');
     const r = await fetch(base()+'/prompt', {method:'POST', headers:hdr({'Content-Type':'application/json'}),
       body: JSON.stringify({prompt: wf, client_id: 'web-'+Date.now()})});
     const j = await r.json().catch(()=>({}));
@@ -574,6 +894,7 @@ $('#go').onclick = async () => {
       throw new Error((j.error && j.error.message || 'ワークフローが拒否されました') + (ne?' - '+ne:''));
     }
     const id = j.prompt_id;
+    setStage('生成中…');
     for(;;){
       await sleep(1200);
       setStatus('生成中… '+Math.round((Date.now()-t0)/1000)+' 秒');
@@ -588,15 +909,18 @@ $('#go').onclick = async () => {
         const i = imgs[0];
         const url = base()+'/view?filename='+encodeURIComponent(i.filename)+'&subfolder='+encodeURIComponent(i.subfolder||'')+'&type='+i.type;
         const blob = await (await fetch(url, {headers:hdr()})).blob();
-        const obj = URL.createObjectURL(blob);
-        showCompare(obj, i.filename);
-        setStatus(Math.round((Date.now()-t0)/1000)+' 秒で完了しました。');
+        const dur = Date.now()-t0; learnDuration(dur);
+        finishProg(); await sleep(400); stopProg();
+        const hid = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+        showCompare(blob, i.filename, orig, hid);
+        setStatus(Math.round(dur/1000)+' 秒で完了しました。');
+        saveHistory({id:hid, ts:Date.now(), prompt, name:i.filename, result:blob, original:orig});
         break;
       }
     }
   }catch(err){
     setStatus(err.message.includes('Failed to fetch') ? 'PCに接続できません。'+mixedHint()+' 「接続設定」から接続テストを行ってください。' : err.message, true);
-  }finally{ btn.disabled = false; }
+  }finally{ stopProg(); btn.disabled = false; }
 };
 </script>
 </body>
