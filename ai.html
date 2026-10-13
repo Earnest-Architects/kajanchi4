@@ -33,10 +33,17 @@ button.go:disabled{opacity:.55;cursor:wait}
 #set.open{display:block}
 #set input{display:block;width:100%;padding:8px;margin-top:6px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.35);color:inherit}
 #conn{margin-top:8px}#conn.ok{color:#7ddc87}#conn.bad{color:var(--err)}
-#result{display:none;padding:24px 16px 48px;text-align:center;min-height:60vh}
-#result h2{font-size:1.1rem;margin:0 0 14px}
-#result img{max-width:100%;border-radius:10px}
-#dl{display:inline-block;margin-top:14px;color:var(--accent);font-weight:700}
+.grp{display:flex;gap:8px;flex-wrap:wrap}
+.panel.hide{display:none}
+#cmp{position:absolute;display:none;z-index:1;touch-action:none;cursor:ew-resize;user-select:none;-webkit-user-select:none}
+#cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;pointer-events:none;-webkit-user-drag:none}
+#cmpB{clip-path:inset(0 0 0 var(--pos,50%))}
+#bar{position:absolute;top:0;bottom:0;left:var(--pos,50%);width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 8px rgba(0,0,0,.7);pointer-events:none}
+#knob{position:absolute;top:50%;left:var(--pos,50%);width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;font-size:15px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.55);cursor:ew-resize}
+#knob:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.tag{position:absolute;top:64px;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.55);font-size:.75rem;pointer-events:none}
+#dl{position:absolute;right:14px;bottom:calc(var(--panel-h,0px) + 14px);z-index:4;display:none;align-items:center;gap:6px;padding:11px 18px;border-radius:999px;background:var(--accent);color:#1a1205;font-weight:700;font-size:.9rem;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+@media(min-width:860px){#dl{bottom:14px}}
 @media(prefers-reduced-motion:no-preference){.busy{animation:p 1.2s ease-in-out infinite}}
 @keyframes p{50%{opacity:.4}}
 </style>
@@ -45,10 +52,26 @@ button.go:disabled{opacity:.55;cursor:wait}
 <div class="hero">
   <img id="cap" alt="360ビューのキャプチャ">
   <div id="capEmpty">360ツアーから取得中です…<br>表示されない場合は「画像を変更」で画像を選んでください。</div>
-  <div class="top">
-    <button class="chip" id="chg" type="button">画像を変更</button>
-    <button class="chip" id="gear" type="button">接続設定</button>
+  <div id="cmp" aria-label="元画像と生成結果の比較">
+    <img id="cmpA" alt="元画像(360キャプチャ)">
+    <img id="cmpB" alt="生成結果">
+    <span class="tag" style="left:10px">元画像</span>
+    <span class="tag" style="right:10px">生成結果</span>
+    <div id="bar"></div>
+    <div id="knob" role="slider" tabindex="0" aria-label="比較スライダー" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">⇔</div>
   </div>
+  <div class="top">
+    <div class="grp">
+      <button class="chip" id="back" type="button">← 戻る</button>
+      <button class="chip" id="chg" type="button">画像を変更</button>
+    </div>
+    <div class="grp" style="justify-content:flex-end">
+      <button class="chip" id="closecmp" type="button" style="display:none">比較を閉じる</button>
+      <button class="chip" id="pnl" type="button">入力パネル</button>
+      <button class="chip" id="gear" type="button">接続設定</button>
+    </div>
+  </div>
+  <a id="dl" download="result.png">⬇ ダウンロード</a>
   <input type="file" id="f1" accept="image/*" hidden>
   <div id="set">
     <input id="base" aria-label="サーバーのアドレス" placeholder="server.pyのアドレス 例: https://pc名.xxxx.ts.net / http://100.x.x.x:8080 / http://localhost:8080">
@@ -66,11 +89,6 @@ button.go:disabled{opacity:.55;cursor:wait}
     <div id="status" aria-live="polite"></div>
   </div>
 </div>
-<section id="result">
-  <h2>生成結果</h2>
-  <div id="out"></div>
-  <a id="dl" download="result.png">画像をダウンロード</a>
-</section>
 <script>
 const WORKFLOW = {
   "461": {
@@ -423,11 +441,62 @@ $('#test').onclick = async () => {
 // 画像1(360キャプチャ): 全画面表示
 function setImg1(f){
   if(!f || !f.type.startsWith('image/')) return;
+  hideCompare();
   files[1] = f;
   const im = $('#cap'); im.src = URL.createObjectURL(f); im.style.display='block';
   $('#capEmpty').style.display='none';
 }
 $('#chg').onclick = () => $('#f1').click();
+
+// 戻る: 元の360タブに戻る(開けなければindex.htmlへ)
+$('#back').onclick = () => {
+  try{
+    if(window.opener && !window.opener.closed){
+      window.opener.focus(); window.close();
+      setTimeout(() => { location.href = 'index.html'; }, 300);
+      return;
+    }
+  }catch(e){}
+  location.href = 'index.html';
+};
+
+// 比較スライダー(元画像と同じ位置・アスペクト比)
+const hero = document.querySelector('.hero'), cmp = $('#cmp'), panel = document.querySelector('.panel');
+function syncPanel(){ hero.style.setProperty('--panel-h', panel.classList.contains('hide') ? '0px' : panel.offsetHeight+'px'); }
+function fit(){
+  const im = $('#cap'); if(!im.naturalWidth) return;
+  const W = hero.clientWidth, H = hero.clientHeight, r = im.naturalWidth/im.naturalHeight;
+  let w = W, h = W/r; if(h > H){ h = H; w = H*r; }
+  Object.assign(cmp.style, {width:w+'px', height:h+'px', left:(W-w)/2+'px', top:(H-h)/2+'px'});
+}
+addEventListener('resize', () => { fit(); syncPanel(); });
+new ResizeObserver(syncPanel).observe(panel);
+function setPos(p){ p = Math.max(0, Math.min(100, p)); cmp.style.setProperty('--pos', p+'%'); $('#knob').setAttribute('aria-valuenow', Math.round(p)); }
+let drag = false;
+const posFrom = e => { const r = cmp.getBoundingClientRect(); setPos((e.clientX-r.left)/r.width*100); };
+cmp.addEventListener('pointerdown', e => { drag = true; cmp.setPointerCapture(e.pointerId); posFrom(e); });
+cmp.addEventListener('pointermove', e => { if(drag) posFrom(e); });
+['pointerup','pointercancel'].forEach(t => cmp.addEventListener(t, () => { drag = false; }));
+$('#knob').addEventListener('keydown', e => {
+  const cur = parseFloat(cmp.style.getPropertyValue('--pos')) || 50;
+  if(e.key === 'ArrowLeft'){ e.preventDefault(); setPos(cur-3); }
+  if(e.key === 'ArrowRight'){ e.preventDefault(); setPos(cur+3); }
+});
+function showCompare(url, name){
+  $('#cmpA').src = $('#cap').src; $('#cmpB').src = url;
+  fit(); setPos(50);
+  cmp.style.display = 'block'; $('#cap').style.display = 'none';
+  $('#dl').href = url; $('#dl').download = name; $('#dl').style.display = 'flex';
+  $('#closecmp').style.display = '';
+  panel.classList.add('hide'); syncPanel();
+}
+function hideCompare(){
+  cmp.style.display = 'none'; $('#dl').style.display = 'none'; $('#closecmp').style.display = 'none';
+  if($('#cap').src) $('#cap').style.display = 'block';
+}
+$('#closecmp').onclick = hideCompare;
+$('#pnl').onclick = () => { panel.classList.toggle('hide'); syncPanel(); };
+syncPanel();
 $('#f1').onchange = e => setImg1(e.target.files[0]);
 if(window.opener){
   window.addEventListener('message', async e => {
@@ -520,10 +589,7 @@ $('#go').onclick = async () => {
         const url = base()+'/view?filename='+encodeURIComponent(i.filename)+'&subfolder='+encodeURIComponent(i.subfolder||'')+'&type='+i.type;
         const blob = await (await fetch(url, {headers:hdr()})).blob();
         const obj = URL.createObjectURL(blob);
-        $('#out').innerHTML = ''; const img = new Image(); img.src = obj; $('#out').append(img);
-        $('#dl').href = obj; $('#dl').download = i.filename;
-        $('#result').style.display='block';
-        $('#result').scrollIntoView({behavior:'smooth'});
+        showCompare(obj, i.filename);
         setStatus(Math.round((Date.now()-t0)/1000)+' 秒で完了しました。');
         break;
       }
