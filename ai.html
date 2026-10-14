@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070a11">
+<title>AIレンダリング — Kajanchi</title>
+<!-- スタイルは css/ai/、スクリプトは js/ai/ に分割(構成は js/ai/README.md) -->
+<link rel="stylesheet" href="css/ai.bundle.min.css?v=8cca3a1c" />
+</head>
+<body>
+<main class="hero" id="hero">
+  <img id="cap" alt="360ビューのキャプチャ">
+  <canvas id="paint" aria-label="赤ペンのマーク"></canvas>
+  <div id="capEmpty">
+    <div class="ico" data-icon="image"></div>
+    <p>360ツアーから取得中です…</p>
+    <p class="sub">表示されない場合は、右上の画像アイコンから選んでください。</p>
+  </div>
+
+  <div id="cmp" aria-label="元画像と生成結果の比較">
+    <img id="cmpA" alt="元画像(360キャプチャ)">
+    <img id="cmpB" alt="生成結果">
+    <span class="tag" style="left:10px">元画像</span>
+    <span class="tag" style="right:10px">生成結果</span>
+    <div id="bar"></div>
+    <div id="knob" role="slider" tabindex="0" aria-label="比較スライダー" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" data-icon="swap"></div>
+  </div>
+
+  <header class="top">
+    <nav class="tb l" aria-label="戻る">
+      <button class="ib" id="back" type="button" data-icon="back" data-tip="戻る" aria-label="戻る"></button>
+    </nav>
+    <nav class="tb" aria-label="ツール">
+      <button class="ib" id="closecmp" type="button" data-icon="close" data-tip="比較を閉じる" aria-label="比較を閉じる" hidden></button>
+      <button class="ib" id="chg" type="button" data-icon="image-plus" data-tip="画像を変更" aria-label="画像を変更"></button>
+      <button class="ib" id="mark" type="button" data-icon="pen" data-tip="赤ペンでマーク" aria-label="赤ペンでマーク" aria-pressed="false" hidden></button>
+      <button class="ib" id="hbtn" type="button" data-icon="history" data-tip="履歴" aria-label="履歴" aria-pressed="false"></button>
+      <button class="ib" id="pnl" type="button" data-icon="panel" data-tip="入力パネル" aria-label="入力パネル" aria-pressed="true"></button>
+      <button class="ib" id="gear" type="button" data-icon="sliders" data-tip="接続設定" aria-label="接続設定" aria-pressed="false"></button>
+    </nav>
+  </header>
+  <input type="file" id="f1" accept="image/*" hidden>
+
+  <div id="set">
+    <h2>サーバー接続</h2>
+    <label class="fld"><span data-icon="server"></span><input id="base" aria-label="サーバーのアドレス" placeholder="https://pc名.xxxx.ts.net / http://localhost:8080"></label>
+    <label class="fld"><span data-icon="key"></span><input id="key" type="password" aria-label="アクセスキー" placeholder="アクセスキー(設定時のみ)" autocomplete="off"></label>
+    <button type="button" class="btn-t" id="test">接続テスト</button>
+    <div id="conn" aria-live="polite"></div>
+  </div>
+
+  <div id="tools" class="tb" role="toolbar" aria-label="マークツール">
+    <button class="ib" id="tPen" type="button" data-icon="pen" data-tip="赤ペン" aria-label="赤ペン" aria-pressed="true"></button>
+    <button class="ib" id="tEr" type="button" data-icon="eraser" data-tip="消しゴム" aria-label="消しゴム" aria-pressed="false"></button>
+    <label class="sz"><input id="tSize" type="range" min="4" max="80" value="20" aria-label="ペンの太さ"></label>
+    <button class="ib" id="tUndo" type="button" data-icon="undo" data-tip="元に戻す" aria-label="元に戻す" disabled></button>
+    <button class="ib" id="tClr" type="button" data-icon="trash" data-tip="全消去" aria-label="全消去" disabled></button>
+    <button class="ib" id="tDone" type="button" data-icon="check" data-tip="完了" aria-label="完了"></button>
+  </div>
+
+  <aside id="hist" aria-label="生成履歴">
+    <button class="ib" id="hclr" type="button" data-icon="trash" data-tip="すべて削除" aria-label="履歴をすべて削除"></button>
+    <div id="hlist"></div>
+    <div id="hempty">履歴なし</div>
+  </aside>
+
+  <div class="acts" id="acts">
+    <button class="ib glass" id="use" type="button" data-icon="replace" data-tip="この結果を画像1にする" aria-label="この結果を画像1にする"></button>
+    <a class="ib glass" id="dl" download="result.png" data-icon="download" data-tip="ダウンロード" aria-label="ダウンロード"></a>
+  </div>
+
+  <section class="composer" aria-label="プロンプト入力">
+    <div id="markinfo" aria-live="polite">赤マークあり — マーク部分のみ編集します</div>
+    <div class="c-row">
+      <div class="drop" id="d2" tabindex="0" role="button" aria-label="画像2(任意・参照画像)" title="画像2(任意・参照画像)"><span class="ico" data-icon="image-plus"></span><input type="file" accept="image/*"></div>
+      <textarea id="pos" rows="1" placeholder="どう変えますか? 例: 画像1のソファを画像2のソファに置き換える"></textarea>
+      <button class="go" id="go" type="button" data-icon="spark" aria-label="生成する" title="生成する (Ctrl+Enter)"></button>
+    </div>
+    <div id="status" aria-live="polite"></div>
+  </section>
+
+  <div id="prog">
+    <canvas id="fx"></canvas>
+    <div class="pc">
+      <div class="ringbox" id="ringbox" role="progressbar" aria-label="生成の進捗(目安)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ee8d2"/><stop offset="1" stop-color="#8fb4ff"/></linearGradient></defs>
+          <circle class="bg" cx="60" cy="60" r="52"/>
+          <circle class="fg" id="ring" cx="60" cy="60" r="52"/>
+          <circle id="tip" cx="112" cy="60" r="3.2"/>
+        </svg>
+        <div id="pct" aria-hidden="true"><span><b>0</b><i>%</i></span></div>
+      </div>
+      <div id="stage" aria-live="polite"></div>
+      <div id="sub"></div>
+      <div id="el"></div>
+    </div>
+  </div>
+</main>
+
+<!-- 読み込み順が依存関係。各ファイルは window.AI に機能を登録する -->
+<script src="js/ai.bundle.min.js?v=463022f2"></script>
+</body>
+</html>
